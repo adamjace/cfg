@@ -1,9 +1,13 @@
 package cfganalyze
 
 import (
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
+)
+
+const (
+	ConfigTypeJSON = "json"
+	ConfigTypeENV  = "env"
 )
 
 type CfgAnalyze struct {
@@ -11,8 +15,6 @@ type CfgAnalyze struct {
 	b          string
 	configType string
 }
-
-type jsonConfig map[string]interface{}
 
 func NewCfgAnalyze(a string, b string, configType string) CfgAnalyze {
 	return CfgAnalyze{
@@ -22,68 +24,27 @@ func NewCfgAnalyze(a string, b string, configType string) CfgAnalyze {
 	}
 }
 
-func (c CfgAnalyze) Analyze() (bool, error) {
+func (c CfgAnalyze) Analyze() ([]string, error) {
 	a, err := ioutil.ReadFile(c.a)
 	if err != nil {
-		return false, fmt.Errorf("could not open %s", c.a)
+		return nil, fmt.Errorf("could not open %s", c.a)
 	}
 
 	b, err := ioutil.ReadFile(c.b)
 	if err != nil {
-		return false, fmt.Errorf("could not open %s", c.b)
+		return nil, fmt.Errorf("could not open %s", c.b)
 	}
 
-	if c.configType == "json" {
-		return c.analyzeJson(a, b)
-	}
-
-	return false, nil
-}
-
-func (c CfgAnalyze) analyzeJson(a, b []byte) (bool, error) {
-	cA := jsonConfig{}
-	if err := json.Unmarshal(a, &cA); err != nil {
-		return false, err
-	}
-
-	cB := jsonConfig{}
-	if err := json.Unmarshal(b, &cB); err != nil {
-		return false, err
-	}
-
-	c.clearValues(cA)
-	c.clearValues(cB)
-
-	bytesA, err := json.Marshal(cA)
-	if err != nil {
-		return false, err
-	}
-
-	bytesB, err := json.Marshal(cB)
-	if err != nil {
-		return false, err
-	}
-
-	strA := string(bytesA)
-	strB := string(bytesB)
-
-	fmt.Printf("%s\n", strA)
-	fmt.Printf("%s\n", strB)
-
-	return strA == strB, nil
-}
-
-func (c *CfgAnalyze) clearValues(m map[string]interface{}) {
-	for k, _ := range m {
-		if !c.isMap(m[k]) {
-			m[k] = ""
-		} else {
-			c.clearValues(m[k].(map[string]interface{}))
+	if c.configType == ConfigTypeJSON {
+		cfgAnalyzeJson, err := newCfgAnalyzeJSON(a, b)
+		if err != nil {
+			return nil, err
 		}
-	}
-}
 
-func (c CfgAnalyze) isMap(m interface{}) bool {
-	_, ok := m.(map[string]interface{})
-	return ok
+		cfgAnalyzeJson.analyze()
+
+		return cfgAnalyzeJson.missingKeys, nil
+	}
+
+	return nil, nil
 }

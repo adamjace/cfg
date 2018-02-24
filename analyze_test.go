@@ -7,12 +7,12 @@ import (
 func TestAnalyze(t *testing.T) {
 	cfganalyze := NewCfgAnalyze("fixtures/a.json", "fixtures/b.json", "json")
 
-	equal, err := cfganalyze.Analyze()
+	missingKeys, err := cfganalyze.Analyze()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if equal {
+	if len(missingKeys) > 0 {
 		t.Fatal("expected to be equal")
 	}
 

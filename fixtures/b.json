@@ -15,5 +15,8 @@
     "black": false,
     "white": false
   },
-  "shapes": ["circle", "square"]
+  "shapes": {
+    "circle": 1,
+    "square": 2
+  }
 }

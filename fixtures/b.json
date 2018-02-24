@@ -1,0 +1,19 @@
+{
+  "fruit": {
+    "apples": {
+      "granny_smith": true,
+      "fuji": false
+    },
+    "bananas": {
+      "cavandish": true,
+      "lady_fingers": false
+    },
+    "mangos": true
+  },
+  "colours": {
+    "green": true,
+    "black": false,
+    "white": false
+  },
+  "shapes": ["circle", "square"]
+}

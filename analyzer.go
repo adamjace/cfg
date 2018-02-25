@@ -54,8 +54,6 @@ func (c Analyzer) Analyze() ([]string, error) {
 		return nil, err
 	}
 
-	fmt.Printf("%+v\n", analyzer.envConfigB)
-
 	analyzer.analyze()
 
 	return analyzer.missingKeys, nil

@@ -41,7 +41,7 @@ func (j *jsonAnalyzer) analyze() {
 }
 
 // diff will peform a diff on keys between two maps, storing keys
-// that exist in map A but are missing in map B
+// that exist in map B but are missing in map A
 func (j *jsonAnalyzer) diff(a configJSON, b configJSON) {
 	keysA := []string{}
 	keysB := []string{}
@@ -49,8 +49,8 @@ func (j *jsonAnalyzer) diff(a configJSON, b configJSON) {
 	j.keys(keysA, a, b)
 	j.keys(keysB, b, a)
 
-	for _, str := range keysA {
-		if !j.contains(keysB, str) && !j.contains(j.missingKeys, str) {
+	for _, str := range keysB {
+		if !j.contains(keysA, str) && !j.contains(j.missingKeys, str) {
 			j.missingKeys = append(j.missingKeys, str)
 		}
 	}

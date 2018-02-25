@@ -39,17 +39,26 @@ func (c Analyzer) Analyze() ([]string, error) {
 	}
 
 	if c.configType == ConfigTypeJSON {
-		cfgAnalyzeJson, err := newJsonAnalyzer(a, b)
+		analyzer, err := newJsonAnalyzer(a, b)
 		if err != nil {
 			return nil, err
 		}
 
-		cfgAnalyzeJson.analyze()
+		analyzer.analyze()
 
-		return cfgAnalyzeJson.missingKeys, nil
+		return analyzer.missingKeys, nil
 	}
 
-	return nil, nil
+	analyzer, err := newEnvAnalyzer(a, b)
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Printf("%+v\n", analyzer.envConfigB)
+
+	analyzer.analyze()
+
+	return analyzer.missingKeys, nil
 }
 
 // EqualKeys will compare two configurations identifying whether they are the same

@@ -4,8 +4,8 @@ import (
 	"testing"
 )
 
-func TestAnalyze(t *testing.T) {
-	cfganalyze := NewAnalyzer("fixtures/a.json", "fixtures/b.json", "json")
+func TestJsonAnalyze(t *testing.T) {
+	cfganalyze := NewAnalyzer("fixtures/a.json", "fixtures/b.json", ConfigTypeJSON)
 
 	missingKeys, err := cfganalyze.Analyze()
 	if err != nil {
@@ -17,8 +17,8 @@ func TestAnalyze(t *testing.T) {
 	}
 }
 
-func TestEqualKeys(t *testing.T) {
-	cfganalyze := NewAnalyzer("fixtures/a.json", "fixtures/b.json", "json")
+func TestJsonEqualKeys(t *testing.T) {
+	cfganalyze := NewAnalyzer("fixtures/a.json", "fixtures/b.json", ConfigTypeJSON)
 
 	equal, err := cfganalyze.EqualKeys()
 	if err != nil {

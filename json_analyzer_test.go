@@ -5,9 +5,12 @@ import (
 )
 
 func TestJsonAnalyze(t *testing.T) {
-	cfganalyze := NewAnalyzer("fixtures/a.json", "fixtures/b.json", ConfigTypeJSON)
+	analyzer, err := NewAnalyzer("fixtures/a.json", "fixtures/b.json")
+	if err != nil {
+		t.Fatal(err)
+	}
 
-	missingKeys, err := cfganalyze.Analyze()
+	missingKeys, err := analyzer.AnalyzeJson()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -18,9 +21,12 @@ func TestJsonAnalyze(t *testing.T) {
 }
 
 func TestJsonEqualKeys(t *testing.T) {
-	cfganalyze := NewAnalyzer("fixtures/a.json", "fixtures/b.json", ConfigTypeJSON)
+	analyzer, err := NewAnalyzer("fixtures/a.json", "fixtures/b.json")
+	if err != nil {
+		t.Fatal(err)
+	}
 
-	equal, err := cfganalyze.EqualKeys()
+	equal, err := analyzer.EqualKeys()
 	if err != nil {
 		t.Fatal(err)
 	}

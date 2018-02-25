@@ -5,51 +5,62 @@ import (
 	"io/ioutil"
 )
 
-const (
-	ConfigTypeJSON = "json"
-	ConfigTypeENV  = "env"
-)
-
 // Analyzer contains data for analyzing config files
 type Analyzer struct {
-	configPathA string
-	configPathB string
-	configType  string
+	configA []byte
+	configB []byte
+	host    string
 }
 
 // NewAnalyzer returns a new Analyzer
-func NewAnalyzer(a string, b string, configType string) Analyzer {
-	return Analyzer{
-		configPathA: a,
-		configPathB: b,
-		configType:  configType,
+func NewAnalyzer(pathA string, pathB string) (*Analyzer, error) {
+	a, err := ioutil.ReadFile(pathA)
+	if err != nil {
+		return nil, fmt.Errorf("could not open %s", pathA)
 	}
+
+	b, err := ioutil.ReadFile(pathB)
+	if err != nil {
+		return nil, fmt.Errorf("could not open %s", pathB)
+	}
+
+	analyzer := Analyzer{
+		configA: a,
+		configB: b,
+	}
+
+	return &analyzer, nil
 }
 
-// Analyze will compare two configurations highlighting keys that are missing
-func (c Analyzer) Analyze() ([]string, error) {
-	a, err := ioutil.ReadFile(c.configPathA)
+// Connect will return a new connected Analyzer to an external host via SSH
+func Connect(pathA string, pathB string, sshHost string) (*Analyzer, error) {
+	analyzer, err := NewAnalyzer(pathA, pathB)
 	if err != nil {
-		return nil, fmt.Errorf("could not open %s", c.configPathA)
+		return nil, err
 	}
 
-	b, err := ioutil.ReadFile(c.configPathB)
+	analyzer.host = sshHost
+
+	return analyzer, nil
+}
+
+// AnalyzeJson will compare two .json configuration files
+// highlighting keys that are missing
+func (c Analyzer) AnalyzeJson() ([]string, error) {
+	analyzer, err := newJsonAnalyzer(c.configA, c.configB)
 	if err != nil {
-		return nil, fmt.Errorf("could not open %s", c.configPathB)
+		return nil, err
 	}
 
-	if c.configType == ConfigTypeJSON {
-		analyzer, err := newJsonAnalyzer(a, b)
-		if err != nil {
-			return nil, err
-		}
+	analyzer.analyze()
 
-		analyzer.analyze()
+	return analyzer.missingKeys, nil
+}
 
-		return analyzer.missingKeys, nil
-	}
-
-	analyzer, err := newEnvAnalyzer(a, b)
+// AnalyzeEnv will compare two .env configuration files
+// highlighting keys that are missing
+func (c Analyzer) AnalyzeEnv() ([]string, error) {
+	analyzer, err := newEnvAnalyzer(c.configA, c.configB)
 	if err != nil {
 		return nil, err
 	}
@@ -61,24 +72,10 @@ func (c Analyzer) Analyze() ([]string, error) {
 
 // EqualKeys will compare two configurations identifying whether they are the same
 func (c Analyzer) EqualKeys() (bool, error) {
-	a, err := ioutil.ReadFile(c.configPathA)
+	analyzer, err := newJsonAnalyzer(c.configA, c.configB)
 	if err != nil {
-		return false, fmt.Errorf("could not open %s", c.configPathB)
+		return false, err
 	}
 
-	b, err := ioutil.ReadFile(c.configPathB)
-	if err != nil {
-		return false, fmt.Errorf("could not open %s", c.configPathB)
-	}
-
-	if c.configType == ConfigTypeJSON {
-		cfgAnalyzeJson, err := newJsonAnalyzer(a, b)
-		if err != nil {
-			return false, err
-		}
-
-		return cfgAnalyzeJson.equalKeys()
-	}
-
-	return false, nil
+	return analyzer.equalKeys()
 }

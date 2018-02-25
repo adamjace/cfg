@@ -20,7 +20,6 @@ type envAnalyzer struct {
 
 // newEnvAnalyzer returns a new envAnalyzer
 func newEnvAnalyzer(a, b []byte) (*envAnalyzer, error) {
-
 	envAnalyzer := envAnalyzer{}
 	envA := strings.Split(string(a), "\n")
 	envB := strings.Split(string(b), "\n")
@@ -59,7 +58,6 @@ func (e *envAnalyzer) analyze() {
 
 // unmarshal will unmarshal a slice of env vars into key value pairs (configEnv)
 func (e envAnalyzer) unmarshal(env []string) ([]configEnv, error) {
-
 	config := []configEnv{}
 
 	for _, line := range env {
@@ -70,7 +68,7 @@ func (e envAnalyzer) unmarshal(env []string) ([]configEnv, error) {
 		}
 
 		if len(parts) != 2 {
-			return nil, errors.New("Invalid key value pair in ENV config")
+			return nil, errors.New("Invalid key value pair in .env config")
 		}
 
 		ce := configEnv{

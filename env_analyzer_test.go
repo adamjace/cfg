@@ -5,12 +5,9 @@ import (
 )
 
 func TestEnvAnalyze(t *testing.T) {
-	cfganalyze, err := NewAnalyzer("fixtures/a.env", "fixtures/b.env")
-	if err != nil {
-		t.Fatal(err)
-	}
+	analyzer := NewAnalyzer()
 
-	missingKeys, err := cfganalyze.AnalyzeEnv()
+	missingKeys, err := analyzer.AnalyzeEnv("fixtures/a.env", "fixtures/b.env")
 	if err != nil {
 		t.Fatal(err)
 	}

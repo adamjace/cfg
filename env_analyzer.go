@@ -21,6 +21,7 @@ type envAnalyzer struct {
 // newEnvAnalyzer returns a new envAnalyzer
 func newEnvAnalyzer(a, b []byte) (*envAnalyzer, error) {
 	envAnalyzer := envAnalyzer{}
+
 	envA := strings.Split(string(a), "\n")
 	envB := strings.Split(string(b), "\n")
 

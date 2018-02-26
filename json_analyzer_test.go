@@ -5,12 +5,9 @@ import (
 )
 
 func TestJsonAnalyze(t *testing.T) {
-	analyzer, err := NewAnalyzer("fixtures/a.json", "fixtures/b.json")
-	if err != nil {
-		t.Fatal(err)
-	}
+	analyzer := NewAnalyzer()
 
-	missingKeys, err := analyzer.AnalyzeJson()
+	missingKeys, err := analyzer.AnalyzeJson("fixtures/a.json", "fixtures/b.json")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -21,12 +18,9 @@ func TestJsonAnalyze(t *testing.T) {
 }
 
 func TestJsonEqualKeys(t *testing.T) {
-	analyzer, err := NewAnalyzer("fixtures/a.json", "fixtures/b.json")
-	if err != nil {
-		t.Fatal(err)
-	}
+	analyzer := NewAnalyzer()
 
-	equal, err := analyzer.EqualKeys()
+	equal, err := analyzer.EqualKeys("fixtures/a.json", "fixtures/b.json")
 	if err != nil {
 		t.Fatal(err)
 	}

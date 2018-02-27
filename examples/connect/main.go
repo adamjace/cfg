@@ -8,13 +8,13 @@ import (
 
 func main() {
 
-	analyzer, err := cfganalyze.Connect("alias")
+	a, err := cfganalyze.Connect("alias")
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	missingKeys, err := analyzer.AnalyzeJson("fixtures/config.json", "~/home/ubuntu/config.json")
+	missingKeys, err := a.AnalyzeJson("test/config.json", "~/home/ubuntu/config.json")
 	if err != nil {
 		fmt.Println(err)
 		return

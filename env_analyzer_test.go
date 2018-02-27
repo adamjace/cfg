@@ -7,7 +7,7 @@ import (
 func TestEnvAnalyze(t *testing.T) {
 	analyzer := NewAnalyzer()
 
-	missingKeys, err := analyzer.AnalyzeEnv("fixtures/a.env", "fixtures/b.env")
+	missingKeys, err := analyzer.AnalyzeEnv("test/a.env", "test/b.env")
 	if err != nil {
 		t.Fatal(err)
 	}

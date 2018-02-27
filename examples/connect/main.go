@@ -8,7 +8,7 @@ import (
 
 func main() {
 
-	a, err := cfganalyze.Connect("alias")
+	a, err := cfganalyze.Connect("host-alias")
 	if err != nil {
 		fmt.Println(err)
 		return

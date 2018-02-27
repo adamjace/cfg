@@ -43,8 +43,9 @@ func (c *analyzer) read(pathA, pathB string) error {
 		return fmt.Errorf("could not open %s. %s", pathA, err)
 	}
 
-	if c.bash == nil {
-		c.configB, err = ioutil.ReadFile(pathB)
+	// we have a remote file. read in the contents via scp
+	if c.bash != nil {
+		c.configB, err = c.bash.scp(pathB)
 		if err != nil {
 			return fmt.Errorf("could not open %s. %s", pathB, err)
 		}
@@ -52,7 +53,7 @@ func (c *analyzer) read(pathA, pathB string) error {
 		return nil
 	}
 
-	c.configB, err = c.bash.scp(pathB)
+	c.configB, err = ioutil.ReadFile(pathB)
 	if err != nil {
 		return fmt.Errorf("could not open %s. %s", pathB, err)
 	}

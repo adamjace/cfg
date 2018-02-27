@@ -61,9 +61,9 @@ func (c *analyzer) read(pathA, pathB string) error {
 	return nil
 }
 
-// AnalyzeJson will compare two .json configuration files
-// highlighting keys that are missing
-func (c analyzer) AnalyzeJson(a, b string) ([]string, error) {
+// MissingJsonKeys will compare two .json configuration files returning a slice
+// of missing keys
+func (c analyzer) MissingJsonKeys(a, b string) ([]string, error) {
 	if err := c.read(a, b); err != nil {
 		return nil, err
 	}
@@ -76,6 +76,23 @@ func (c analyzer) AnalyzeJson(a, b string) ([]string, error) {
 	analyzer.analyze()
 
 	return analyzer.missingKeys, nil
+}
+
+// AnalyzeJson will compare two .json configuration files
+// highlighting keys that are missing
+func (c analyzer) AnalyzeJson(a, b string) error {
+	keys, err := c.MissingJsonKeys(a, b)
+	if err != nil {
+		return err
+	}
+
+	if len(keys) == 0 {
+		return nil
+	}
+
+	fmt.Printf("warning! missing keys from json file (%s): %+v\n", b, keys)
+
+	return nil
 }
 
 // AnalyzeEnv will compare two .env configuration files

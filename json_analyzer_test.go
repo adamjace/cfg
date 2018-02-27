@@ -7,10 +7,12 @@ import (
 func TestJsonAnalyze(t *testing.T) {
 	analyzer := NewAnalyzer()
 
-	missingKeys, err := analyzer.AnalyzeJson("test/a.json", "test/b.json")
+	missingKeys, err := analyzer.MissingJsonKeys("test/a.json", "test/b.json")
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	analyzer.AnalyzeJson("test/a.json", "test/b.json")
 
 	if len(missingKeys) > 0 {
 		t.Fatal("expected missing keys to be 0")

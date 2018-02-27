@@ -1,21 +1,7 @@
 {
-  "colours": {
-    "green": true,
-    "black": false,
-    "white": false
-  },
-  "fruit": {
-    "apples": {
-      "granny_smith": true,
-      "fuji": false
-    },
-    "bananas": {
-      "lady_fingers": false,
-      "cavandish": true
-    },
-    "mangos": true
-  },
-  "shapes": {
-    "circle": true
+  "1": true,
+  "2": false,
+  "3": {
+    "4": true
   }
 }

@@ -9,7 +9,7 @@ Currently supports `json` and `env` config types.
 
 ### Analyzing local files
 
-```
+```go
   a := cfganalyze.NewAnalyzer()
 
   missingKeys, err := a.AnalyzeJson("a.json", "b.json")
@@ -25,7 +25,7 @@ Currently supports `json` and `env` config types.
 
 ### Analyzing local and remote files
 
-```
+```go
   a := cfganalyze.Connect("host-alias")
 
   missingKeys, err := a.AnalyzeJson("config.json", "~/home/ubuntu/config.json")

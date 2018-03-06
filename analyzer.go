@@ -1,74 +1,96 @@
-package cfganalyze
+package cfg
 
 import (
 	"fmt"
 	"io/ioutil"
 )
 
-// analyzer contains data for analyzing config files
-type analyzer struct {
-	configA []byte
-	configB []byte
-	bash    *bash
+type analyzer interface {
+	analyze()
 }
 
-// NewAnalyzer returns a new Analyzer
-func NewAnalyzer() *analyzer {
-	return &analyzer{}
+// baseAnalyzer contains data for analyzing config files
+type baseAnalyzer struct {
+	working     []byte
+	master      []byte
+	bash        *bash
+	missingKeys []string
 }
 
-// Connect will return a new connected Analyzer to an external host via SSH
-func Connect(hostAlias string) (*analyzer, error) {
+// newBaseAnalyzer returns a new baseAnalyzer
+func newBaseAnalyzer(c Config) (*baseAnalyzer, error) {
 
-	bash := newBash(hostAlias)
+	analyzer := baseAnalyzer{}
 
-	if err := bash.ssh(); err != nil {
-		return nil, fmt.Errorf(
-			"could not connect to host %s. %s", hostAlias, err)
-	}
-
-	analyzer := &analyzer{
-		bash: bash,
-	}
-
-	return analyzer, nil
-}
-
-// read will read a config file to []byte
-func (c *analyzer) read(pathA, pathB string) error {
-	var err error
-
-	c.configA, err = ioutil.ReadFile(pathA)
-	if err != nil {
-		return fmt.Errorf("could not open %s. %s", pathA, err)
-	}
-
-	// we have a remote file. read in the contents via scp
-	if c.bash != nil {
-		c.configB, err = c.bash.scp(pathB)
-		if err != nil {
-			return fmt.Errorf("could not open %s. %s", pathB, err)
+	if len(c.HostAlias) > 0 {
+		if err := analyzer.connect(c.HostAlias); err != nil {
+			return nil, err
 		}
-
-		return nil
 	}
 
-	c.configB, err = ioutil.ReadFile(pathB)
-	if err != nil {
-		return fmt.Errorf("could not open %s. %s", pathB, err)
+	if err := analyzer.read(c.WorkingPath, c.MasterPath); err != nil {
+		return nil, err
+	}
+
+	return &analyzer, nil
+}
+
+// connect will return a new connected Analyzer to an external host via SSH
+func (b *baseAnalyzer) connect(hostAlias string) error {
+
+	b.bash = newBash(hostAlias)
+
+	if err := b.bash.ssh(); err != nil {
+		fmt.Errorf("could not connect to host %s. %s", hostAlias, err)
 	}
 
 	return nil
 }
 
-// MissingJsonKeys will compare two .json configuration files returning a slice
-// of missing keys
-func (c analyzer) MissingJsonKeys(a, b string) ([]string, error) {
-	if err := c.read(a, b); err != nil {
+// read will read a config file to []byte
+func (b *baseAnalyzer) read(workingPath, masterPath string) error {
+	var err error
+
+	b.working, err = ioutil.ReadFile(workingPath)
+	if err != nil {
+		return fmt.Errorf("could not open %s. %s", workingPath, err)
+	}
+
+	// we have a remote file. read in the contents via scp
+	if b.bash != nil {
+		b.master, err = b.bash.scp(masterPath)
+		if err != nil {
+			return fmt.Errorf("could not open %s. %s", masterPath, err)
+		}
+
+		return nil
+	}
+
+	b.master, err = ioutil.ReadFile(masterPath)
+	if err != nil {
+		return fmt.Errorf("could not open %s. %s", masterPath, err)
+	}
+
+	return nil
+}
+
+// ScanJson will scan two JSON configuration files returning a slice
+// of keys that are missing in the working file
+func ScanJson(c Config) ([]string, error) {
+	analyzer, err := newJsonAnalyzer(c)
+	if err != nil {
 		return nil, err
 	}
 
-	analyzer, err := newJsonAnalyzer(c.configA, c.configB)
+	analyzer.analyze()
+
+	return analyzer.missingKeys, nil
+}
+
+// ScanEnv will scan two ENV configuration files returning a slice
+// of keys that are missing in the working file
+func ScanEnv(c Config) ([]string, error) {
+	analyzer, err := newEnvAnalyzer(c)
 	if err != nil {
 		return nil, err
 	}
@@ -80,8 +102,8 @@ func (c analyzer) MissingJsonKeys(a, b string) ([]string, error) {
 
 // AnalyzeJson will compare two .json configuration files
 // highlighting keys that are missing
-func (c analyzer) AnalyzeJson(a, b string) error {
-	keys, err := c.MissingJsonKeys(a, b)
+func AnalyzeJson(c Config) error {
+	keys, err := ScanJson(c)
 	if err != nil {
 		return err
 	}
@@ -90,38 +112,24 @@ func (c analyzer) AnalyzeJson(a, b string) error {
 		return nil
 	}
 
-	fmt.Printf("warning! missing keys from json file (%s): %+v\n", b, keys)
+	fmt.Printf("warning! missing keys from json file (%s): %+v\n", c.MasterPath, keys)
 
 	return nil
 }
 
 // AnalyzeEnv will compare two .env configuration files
 // highlighting keys that are missing
-func (c analyzer) AnalyzeEnv(a, b string) ([]string, error) {
-	if err := c.read(a, b); err != nil {
-		return nil, err
-	}
-
-	analyzer, err := newEnvAnalyzer(c.configA, c.configB)
+func AnalyzeEnv(c Config) error {
+	keys, err := ScanEnv(c)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	analyzer.analyze()
-
-	return analyzer.missingKeys, nil
-}
-
-// EqualKeys will compare two configurations identifying whether they are the same
-func (c analyzer) EqualKeys(a, b string) (bool, error) {
-	if err := c.read(a, b); err != nil {
-		return false, err
+	if len(keys) == 0 {
+		return nil
 	}
 
-	analyzer, err := newJsonAnalyzer(c.configA, c.configB)
-	if err != nil {
-		return false, err
-	}
+	fmt.Printf("warning! missing keys from env file (%s): %+v\n", c.MasterPath, keys)
 
-	return analyzer.equalKeys()
+	return nil
 }

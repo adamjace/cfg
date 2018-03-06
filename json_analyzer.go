@@ -1,50 +1,57 @@
-package cfganalyze
+package cfg
 
 import (
 	"encoding/json"
 )
 
-// configJSON is a basic map struct
-type configJSON map[string]interface{}
+// jsoncfg is a basic map struct for json configs
+type jsoncfg map[string]interface{}
 
 // jsonAnalyzer holds data for both JSON maps
 type jsonAnalyzer struct {
-	jsonConfigA configJSON
-	jsonConfigB configJSON
-	missingKeys []string
+	baseAnalyzer
+	jsonWorking jsoncfg
+	jsonMaster  jsoncfg
 }
 
 // newJsonAnalyzer returns a new newCfgAnalyzeJSON loaded with JSON maps
-func newJsonAnalyzer(a, b []byte) (*jsonAnalyzer, error) {
-	jsonA := configJSON{}
-	if err := json.Unmarshal(a, &jsonA); err != nil {
+func newJsonAnalyzer(c Config) (*jsonAnalyzer, error) {
+
+	base, err := newBaseAnalyzer(c)
+	if err != nil {
 		return nil, err
 	}
 
-	jsonB := configJSON{}
-	if err := json.Unmarshal(b, &jsonB); err != nil {
+	working := jsoncfg{}
+	if err := json.Unmarshal(base.working, &working); err != nil {
 		return nil, err
 	}
 
-	jsonAnalyzer := &jsonAnalyzer{
-		jsonConfigA: jsonA,
-		jsonConfigB: jsonB,
+	master := jsoncfg{}
+	if err := json.Unmarshal(base.master, &master); err != nil {
+		return nil, err
 	}
 
-	return jsonAnalyzer, nil
+	jsonAnalyzer := jsonAnalyzer{
+		baseAnalyzer: *base,
+		jsonWorking:  working,
+		jsonMaster:   master,
+	}
+
+	return &jsonAnalyzer, nil
 }
 
 // analyze will analyze two maps identifying keys that exist in map A
 // that are missing in map B
 func (j *jsonAnalyzer) analyze() {
-	j.diff(j.jsonConfigA, j.jsonConfigB)
+	j.diff(j.jsonWorking, j.jsonMaster)
 }
 
 // diff will peform a diff on keys between two maps, storing keys
 // that exist in map B but are missing in map A
-func (j *jsonAnalyzer) diff(a configJSON, b configJSON) {
-	keysA := j.keys(a, b)
-	keysB := j.keys(b, a)
+func (j *jsonAnalyzer) diff(working jsoncfg, master jsoncfg) {
+	keysA := j.keys(working, master)
+	keysB := j.keys(master, working)
 
 	for _, str := range keysB {
 		if !j.contains(keysA, str) && !j.contains(j.missingKeys, str) {
@@ -54,19 +61,20 @@ func (j *jsonAnalyzer) diff(a configJSON, b configJSON) {
 }
 
 // keys stores known missing keys between map a and map b
-func (j *jsonAnalyzer) keys(a configJSON, b configJSON) []string {
+func (j *jsonAnalyzer) keys(working jsoncfg, master jsoncfg) []string {
 	keys := []string{}
 
-	for k, _ := range a {
+	for k, _ := range working {
 		keys = append(keys, k)
 
-		if j.isMap(a[k]) {
-			if !j.isMap(b[k]) {
+		if j.isMap(working[k]) {
+			if !j.isMap(master[k]) {
 				j.missingKeys = append(j.missingKeys, k)
 				continue
 			}
 
-			j.diff(a[k].(map[string]interface{}), b[k].(map[string]interface{}))
+			j.diff(working[k].(map[string]interface{}),
+				master[k].(map[string]interface{}))
 		}
 	}
 
@@ -76,15 +84,15 @@ func (j *jsonAnalyzer) keys(a configJSON, b configJSON) []string {
 // equalKeys will scan both maps determining whether map B
 // has identical keys compared with map A
 func (j jsonAnalyzer) equalKeys() (bool, error) {
-	j.clearValues(j.jsonConfigA)
-	j.clearValues(j.jsonConfigB)
+	j.clearValues(j.jsonWorking)
+	j.clearValues(j.jsonMaster)
 
-	bytesA, err := json.Marshal(j.jsonConfigA)
+	bytesA, err := json.Marshal(j.jsonWorking)
 	if err != nil {
 		return false, err
 	}
 
-	bytesB, err := json.Marshal(j.jsonConfigB)
+	bytesB, err := json.Marshal(j.jsonMaster)
 	if err != nil {
 		return false, err
 	}

@@ -3,20 +3,17 @@ package main
 import (
 	"log"
 
-	"github.com/adamjace/cfganalyze"
+	"github.com/adamjace/cfg"
 )
 
 func main() {
 
-	a := cfganalyze.NewAnalyzer()
-
-	missingKeys, err := a.AnalyzeJson("sampleA.json", "sampleB.json")
-	if err != nil {
-		log.Println(err)
-		return
+	c := cfg.Config{
+		WorkingPath: "test/a.json",
+		MasterPath:  "test/b.json",
 	}
 
-	for _, key := range missingKeys {
-		log.Printf("Found missing key: %s", key)
+	if err := cfg.AnalyzeJson(c); err != nil {
+		log.Print(err)
 	}
 }

@@ -1,4 +1,4 @@
-package cfganalyze
+package cfg
 
 import (
 	"fmt"

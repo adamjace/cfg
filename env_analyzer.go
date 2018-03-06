@@ -1,4 +1,4 @@
-package cfganalyze
+package cfg
 
 import (
 	"errors"
@@ -13,46 +13,50 @@ type configEnv struct {
 
 // envAnalyzer holds data for both ENV configs
 type envAnalyzer struct {
-	envConfigA  []configEnv
-	envConfigB  []configEnv
-	missingKeys []string
+	baseAnalyzer
+	envWorking []configEnv
+	envMaster  []configEnv
 }
 
 // newEnvAnalyzer returns a new envAnalyzer
-func newEnvAnalyzer(a, b []byte) (*envAnalyzer, error) {
-	envAnalyzer := envAnalyzer{}
+func newEnvAnalyzer(c Config) (*envAnalyzer, error) {
 
-	envA := strings.Split(string(a), "\n")
-	envB := strings.Split(string(b), "\n")
-
-	var err error
-
-	envAnalyzer.envConfigA, err = envAnalyzer.unmarshal(envA)
+	base, err := newBaseAnalyzer(c)
 	if err != nil {
 		return nil, err
 	}
 
-	envAnalyzer.envConfigB, err = envAnalyzer.unmarshal(envB)
+	analyzer := envAnalyzer{}
+
+	working := strings.Split(string(base.working), "\n")
+	master := strings.Split(string(base.master), "\n")
+
+	analyzer.envWorking, err = analyzer.unmarshal(working)
 	if err != nil {
 		return nil, err
 	}
 
-	return &envAnalyzer, nil
+	analyzer.envMaster, err = analyzer.unmarshal(master)
+	if err != nil {
+		return nil, err
+	}
+
+	return &analyzer, nil
 }
 
 // analyze will analyze two sets of env key value paids identifying keys that
 // exist in config B but are missing in config A
 func (e *envAnalyzer) analyze() {
-	for _, itemB := range e.envConfigB {
+	for _, master := range e.envMaster {
 		exists := false
-		for _, itemA := range e.envConfigA {
-			if itemB.Key == itemA.Key {
+		for _, working := range e.envWorking {
+			if master.Key == working.Key {
 				exists = true
 			}
 		}
 
 		if !exists {
-			e.missingKeys = append(e.missingKeys, itemB.Key)
+			e.missingKeys = append(e.missingKeys, master.Key)
 		}
 	}
 }

@@ -5,11 +5,14 @@ import (
 	"io/ioutil"
 )
 
-type analyzer interface {
-	analyze()
-}
-
-// baseAnalyzer contains data for analyzing config files
+// baseAnalyzer contains base data for analyzing all supported types of config
+// files.
+//
+// The working file is considered is considered to be the current local or
+// active config file driving the local application.
+//
+// The master file is considered to be the 'compare to' file which could either
+// be an example file, locally or an active remote config file on a server.
 type baseAnalyzer struct {
 	working     []byte
 	master      []byte
@@ -35,7 +38,68 @@ func newBaseAnalyzer(c Config) (*baseAnalyzer, error) {
 	return &analyzer, nil
 }
 
+// ScanJson will scan two .json configuration files returning a slice
+// of keys that exist in the master file and are missing in the working file
+func ScanJson(c Config) ([]string, error) {
+	analyzer, err := newJsonAnalyzer(c)
+	if err != nil {
+		return nil, err
+	}
+
+	analyzer.analyze()
+
+	return analyzer.missingKeys, nil
+}
+
+// ScanEnv will scan two .env configuration files returning a slice
+// of keys that exist in the master file and are missing in the working file
+func ScanEnv(c Config) ([]string, error) {
+	analyzer, err := newEnvAnalyzer(c)
+	if err != nil {
+		return nil, err
+	}
+
+	analyzer.analyze()
+
+	return analyzer.missingKeys, nil
+}
+
+// PrintJson uses ScanJson to retrieve a slice of missing keys and will then
+// print out the difference / discrepencies between the master and working files
+func PrintJson(c Config) error {
+	keys, err := ScanJson(c)
+	if err != nil {
+		return err
+	}
+
+	if len(keys) == 0 {
+		return nil
+	}
+
+	fmt.Printf("warning! missing keys from json file (%s): %+v\n", c.MasterPath, keys)
+
+	return nil
+}
+
+// PrintEnv uses ScanEnv to retrieve a slice of missing keys and will then
+// print out the difference / discrepencies between the master and working files
+func PrintEnv(c Config) error {
+	keys, err := ScanEnv(c)
+	if err != nil {
+		return err
+	}
+
+	if len(keys) == 0 {
+		return nil
+	}
+
+	fmt.Printf("warning! missing keys from env file (%s): %+v\n", c.MasterPath, keys)
+
+	return nil
+}
+
 // connect will return a new connected Analyzer to an external host via SSH
+// currently this only supports connection via bash
 func (b *baseAnalyzer) connect(hostAlias string) error {
 
 	b.bash = newBash(hostAlias)
@@ -70,66 +134,6 @@ func (b *baseAnalyzer) read(workingPath, masterPath string) error {
 	if err != nil {
 		return fmt.Errorf("could not open %s. %s", masterPath, err)
 	}
-
-	return nil
-}
-
-// ScanJson will scan two JSON configuration files returning a slice
-// of keys that are missing in the working file
-func ScanJson(c Config) ([]string, error) {
-	analyzer, err := newJsonAnalyzer(c)
-	if err != nil {
-		return nil, err
-	}
-
-	analyzer.analyze()
-
-	return analyzer.missingKeys, nil
-}
-
-// ScanEnv will scan two ENV configuration files returning a slice
-// of keys that are missing in the working file
-func ScanEnv(c Config) ([]string, error) {
-	analyzer, err := newEnvAnalyzer(c)
-	if err != nil {
-		return nil, err
-	}
-
-	analyzer.analyze()
-
-	return analyzer.missingKeys, nil
-}
-
-// AnalyzeJson will compare two .json configuration files
-// highlighting keys that are missing
-func AnalyzeJson(c Config) error {
-	keys, err := ScanJson(c)
-	if err != nil {
-		return err
-	}
-
-	if len(keys) == 0 {
-		return nil
-	}
-
-	fmt.Printf("warning! missing keys from json file (%s): %+v\n", c.MasterPath, keys)
-
-	return nil
-}
-
-// AnalyzeEnv will compare two .env configuration files
-// highlighting keys that are missing
-func AnalyzeEnv(c Config) error {
-	keys, err := ScanEnv(c)
-	if err != nil {
-		return err
-	}
-
-	if len(keys) == 0 {
-		return nil
-	}
-
-	fmt.Printf("warning! missing keys from env file (%s): %+v\n", c.MasterPath, keys)
 
 	return nil
 }

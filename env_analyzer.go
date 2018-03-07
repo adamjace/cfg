@@ -11,7 +11,7 @@ type configEnv struct {
 	Value string
 }
 
-// envAnalyzer holds data for both ENV configs
+// envAnalyzer holds data for both working and master .env config files
 type envAnalyzer struct {
 	baseAnalyzer
 	envWorking []configEnv
@@ -44,8 +44,8 @@ func newEnvAnalyzer(c Config) (*envAnalyzer, error) {
 	return &analyzer, nil
 }
 
-// analyze will analyze two sets of env key value paids identifying keys that
-// exist in config B but are missing in config A
+// analyze will analyze two sets of env key value pairs identifying keys that
+// exist in the master file and are missing in the working file
 func (e *envAnalyzer) analyze() {
 	for _, master := range e.envMaster {
 		exists := false

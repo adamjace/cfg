@@ -1,40 +1,45 @@
-# cfganalyze
+# cfg
 
-A simple config analysis tool aimed to help keep config
+A simple config analysis tool aimed to help keep configuration
 files in sync by scanning for missing keys.
 
-Currently supports `json` and `env` config types.
+This package currently supports `json` and `env` config types.
 
 ## Usage
 
 ### Compare local files
 
 ```go
-  a := cfganalyze.NewAnalyzer()
+  c := cfg.Config{
+    WorkingPath: "config/.env",
+    MasterPath:  "config/.env.example",
+  }
 
-  missingKeys, err := a.AnalyzeEnv("config/.env", "config/.env.example")
+  keys, err := cfg.ScanEnv(c)
   if err != nil {
     log.Println(err)
     return
   }
 
-  for _, key := range missingKeys {
-    log.Printf("Found missing key: %s", key)
+  for _, k := range keys {
+    log.Printf("Uh oh! Found a missing key: %s", k)
   }
 ```
 
 ### Compare local with remote
 
 ```go
-  a := cfganalyze.Connect("host-alias")
 
-  missingKeys, err := a.AnalyzeJson("config.json", "~/home/ubuntu/app/config.json")
-  if err != nil {
+  c := cfg.Config{
+    WorkingPath: "config/.env",
+    MasterPath:  "config/.env.example",
+    HostAlias:   "host-alias",
+  }
+
+  if err := cfg.PrintJson(); err != nil {
     log.Println(err)
     return
   }
 
-  for _, key := range missingKeys {
-    log.Printf("Found missing key: %s", key)
-  }
+  // prints missing keys
 ```

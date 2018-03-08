@@ -9,7 +9,7 @@ type jsoncfg map[string]interface{}
 
 // jsonAnalyzer holds data for both JSON maps
 type jsonAnalyzer struct {
-	baseAnalyzer
+	analyzer
 	jsonWorking jsoncfg
 	jsonMaster  jsoncfg
 }
@@ -17,25 +17,25 @@ type jsonAnalyzer struct {
 // newJsonAnalyzer returns a new jsonAnalyzer loaded with json maps
 func newJsonAnalyzer(c Config) (*jsonAnalyzer, error) {
 
-	base, err := newBaseAnalyzer(c)
+	analyzer, err := newAnalyzer(c)
 	if err != nil {
 		return nil, err
 	}
 
 	working := jsoncfg{}
-	if err := json.Unmarshal(base.working, &working); err != nil {
+	if err := json.Unmarshal(analyzer.working, &working); err != nil {
 		return nil, err
 	}
 
 	master := jsoncfg{}
-	if err := json.Unmarshal(base.master, &master); err != nil {
+	if err := json.Unmarshal(analyzer.master, &master); err != nil {
 		return nil, err
 	}
 
 	jsonAnalyzer := jsonAnalyzer{
-		baseAnalyzer: *base,
-		jsonWorking:  working,
-		jsonMaster:   master,
+		analyzer:    *analyzer,
+		jsonWorking: working,
+		jsonMaster:  master,
 	}
 
 	return &jsonAnalyzer, nil
@@ -43,7 +43,7 @@ func newJsonAnalyzer(c Config) (*jsonAnalyzer, error) {
 
 // analyze will analyze two sets of json config files identifying keys that
 // exist in the master file and are missing in the working file
-func (j *jsonAnalyzer) analyze() {
+func (j *jsonAnalyzer) scan() {
 	j.diff(j.jsonWorking, j.jsonMaster)
 }
 
@@ -54,8 +54,8 @@ func (j *jsonAnalyzer) diff(working jsoncfg, master jsoncfg) {
 	keysB := j.keys(master, working)
 
 	for _, str := range keysB {
-		if !j.contains(keysA, str) && !j.contains(j.missingKeys, str) {
-			j.missingKeys = append(j.missingKeys, str)
+		if !j.contains(keysA, str) && !j.contains(j.missing, str) {
+			j.missing = append(j.missing, str)
 		}
 	}
 }
@@ -69,7 +69,7 @@ func (j *jsonAnalyzer) keys(working jsoncfg, master jsoncfg) []string {
 
 		if j.isMap(working[k]) {
 			if !j.isMap(master[k]) {
-				j.missingKeys = append(j.missingKeys, k)
+				j.missing = append(j.missing, k)
 				continue
 			}
 

@@ -45,7 +45,7 @@ This package currently supports `json` and `env` config types.
 ```go
   c := cfg.Config{
     WorkingPath: "config.json",
-    MasterPath:  "/home/ubuntu/app/config.jsob",
+    MasterPath:  "/home/ubuntu/app/config.json",
     HostAlias:   "host-alias",
   }
 
@@ -66,7 +66,7 @@ This package currently supports `json` and `env` config types.
     HostAlias:   "host-alias",
   }
 
-  cfg.PrintJson();
+  cfg.PrintJson(c);
 
   // (!) found missing keys in config.json: [foo bar]
 ```

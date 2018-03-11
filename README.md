@@ -9,37 +9,64 @@ This package currently supports `json` and `env` config types.
 
 ### Compare local files
 
+#### Scan
+
 ```go
   c := cfg.Config{
     WorkingPath: "config/.env",
     MasterPath:  "config/.env.example",
   }
 
-  keys, err := cfg.ScanEnv(c)
-  if err != nil {
-    log.Println(err)
-    return
-  }
+  keys, _ := cfg.ScanEnv(c)
 
   for _, k := range keys {
     log.Printf("Uh oh! Found a missing key: %s", k)
   }
 ```
 
+#### Print
+
+```go
+  c := cfg.Config{
+    WorkingPath: "config/.env",
+    MasterPath:  "config/.env.example",
+  }
+
+  cfg.PrintEnv(c)
+
+  // (!) found missing keys in config/.env: [foo bar]
+
+```
+
 ### Compare local with remote
+
+#### Scan
+
+```go
+  c := cfg.Config{
+    WorkingPath: "config.json",
+    MasterPath:  "/home/ubuntu/app/config.jsob",
+    HostAlias:   "host-alias",
+  }
+
+  keys, _ := cfg.ScanEnv(c)
+
+  for _, k := range keys {
+    log.Printf("Uh oh! Found a missing key: %s", k)
+  }
+```
+
+#### Print
 
 ```go
 
   c := cfg.Config{
-    WorkingPath: "config/.env",
-    MasterPath:  "config/.env.example",
+    WorkingPath: "config.json",
+    MasterPath:  "/home/ubuntu/app/config.json",
     HostAlias:   "host-alias",
   }
 
-  if err := cfg.PrintJson(); err != nil {
-    log.Println(err)
-    return
-  }
+  cfg.PrintJson();
 
-  // prints missing keys
+  // (!) found missing keys in config.json: [foo bar]
 ```

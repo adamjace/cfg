@@ -5,12 +5,11 @@ import (
 	"io/ioutil"
 )
 
-// analyzer contains base data for analyzing all supported types of config
-// files.
+// analyzer contains base data for analyzing all supported types of config files.
 //
-// The working file is considered to be the current local or
-// active config file driving the local application.
-//
+// The working file is considered to be the current local or active config file
+// driving the local application.
+
 // The master file is considered to be the 'compare to' file which could either
 // be a local example file or an active remote config file on a server.
 type analyzer struct {

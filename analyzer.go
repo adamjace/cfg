@@ -8,11 +8,11 @@ import (
 // analyzer contains base data for analyzing all supported types of config
 // files.
 //
-// The working file is considered is considered to be the current local or
+// The working file is considered to be the current local or
 // active config file driving the local application.
 //
 // The master file is considered to be the 'compare to' file which could either
-// be an example file, locally or an active remote config file on a server.
+// be a local example file or an active remote config file on a server.
 type analyzer struct {
 	working   []byte
 	master    []byte

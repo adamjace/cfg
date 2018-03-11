@@ -1,7 +1,7 @@
 # cfg
 
 A simple config analysis tool aimed to help keep configuration
-files in sync by scanning for missing keys.
+files in sync by scanning for missing keys and determining key/value equality between files.
 
 This package currently supports `json` and `env` config types.
 

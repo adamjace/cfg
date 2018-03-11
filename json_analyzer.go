@@ -67,18 +67,52 @@ func (j *jsonAnalyzer) keys(working jsoncfg, master jsoncfg) []string {
 	for k, _ := range working {
 		keys = append(keys, k)
 
+		// this key does not exist in the master file, ignore and continue
+		if _, ok := master[k]; !ok {
+			continue
+		}
+
+		// this key contains a nested map
 		if j.isMap(working[k]) {
 			if !j.isMap(master[k]) {
 				j.missing = append(j.missing, k)
 				continue
 			}
 
+			// ...and so does the key in the master file. drill down to compare
+			// the next set of maps between working and master
 			j.diff(working[k].(map[string]interface{}),
 				master[k].(map[string]interface{}))
 		}
 	}
 
 	return keys
+}
+
+// equalKeys will determining whether or not the working file
+// has identical keys compared to the master file
+func (j jsonAnalyzer) equalKeys() (bool, error) {
+	j.clearValues(j.jsonMaster)
+	j.clearValues(j.jsonWorking)
+
+	return j.equality()
+}
+
+// equality will determining whether or not the working file
+// is identical to the master file
+func (j jsonAnalyzer) equality() (bool, error) {
+
+	bytesA, err := json.Marshal(j.jsonMaster)
+	if err != nil {
+		return false, err
+	}
+
+	bytesB, err := json.Marshal(j.jsonWorking)
+	if err != nil {
+		return false, err
+	}
+
+	return string(bytesA) == string(bytesB), nil
 }
 
 // clearValues will set empty values for each key in a given map

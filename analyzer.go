@@ -14,10 +14,11 @@ import (
 // The master file is considered to be the 'compare to' file which could either
 // be an example file, locally or an active remote config file on a server.
 type analyzer struct {
-	working []byte
-	master  []byte
-	bash    *bash
-	missing []string
+	working   []byte
+	master    []byte
+	bash      *bash
+	missing   []string
+	different []string
 }
 
 // newAnalyzer returns a new analyzer
@@ -51,6 +52,33 @@ func ScanJson(c Config) ([]string, error) {
 	return analyzer.missing, nil
 }
 
+// PrintJson uses ScanJson to retrieve a slice of missing keys and will then
+// print out the difference / discrepencies between the master and working files
+func PrintJson(c Config) error {
+	analyzer, err := newJsonAnalyzer(c)
+	if err != nil {
+		return err
+	}
+
+	analyzer.scan()
+
+	if len(analyzer.missing) > 0 {
+		fmt.Printf("(!) found missing keys in %s: %+v\n", c.WorkingPath, analyzer.missing)
+		return nil
+	}
+
+	equal, err := analyzer.equality()
+	if err != nil {
+		return err
+	}
+
+	if !equal {
+		fmt.Printf("(!) %s and %s are different. Ignore if this is intentional\n", c.WorkingPath, c.MasterPath)
+	}
+
+	return nil
+}
+
 // ScanEnv will scan two .env configuration files returning a slice
 // of keys that exist in the master file and are missing in the working file
 func ScanEnv(c Config) ([]string, error) {
@@ -64,36 +92,26 @@ func ScanEnv(c Config) ([]string, error) {
 	return analyzer.missing, nil
 }
 
-// PrintJson uses ScanJson to retrieve a slice of missing keys and will then
-// print out the difference / discrepencies between the master and working files
-func PrintJson(c Config) error {
-	keys, err := ScanJson(c)
-	if err != nil {
-		return err
-	}
-
-	if len(keys) == 0 {
-		return nil
-	}
-
-	fmt.Printf("warning! found missing keys in json file (%s): %+v\n", c.WorkingPath, keys)
-
-	return nil
-}
-
 // PrintEnv uses ScanEnv to retrieve a slice of missing keys and will then
 // print out the difference / discrepencies between the master and working files
 func PrintEnv(c Config) error {
-	keys, err := ScanEnv(c)
+	analyzer, err := newEnvAnalyzer(c)
 	if err != nil {
 		return err
 	}
 
-	if len(keys) == 0 {
+	analyzer.scan()
+
+	if len(analyzer.missing) > 0 {
+		fmt.Printf("(!) found missing keys in %s: %+v\n", c.WorkingPath, analyzer.missing)
 		return nil
 	}
 
-	fmt.Printf("warning! found missing keys in env file (%s): %+v\n", c.WorkingPath, keys)
+	if len(analyzer.different) > 0 {
+		fmt.Printf("(!) %s and %s are different. Ignore if this is intentional\n", c.WorkingPath, c.MasterPath)
+		fmt.Printf("%+v\n", analyzer.different)
+		return nil
+	}
 
 	return nil
 }

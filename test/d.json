@@ -1,0 +1,9 @@
+{
+  "mangos": true,
+  "bananas": false,
+  "apples": {
+    "red": true,
+    "green": true
+  },
+  "guavas": null
+}

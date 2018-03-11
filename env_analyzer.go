@@ -2,6 +2,7 @@ package cfg
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 )
 
@@ -44,13 +45,19 @@ func newEnvAnalyzer(c Config) (*envAnalyzer, error) {
 	return &analyzer, nil
 }
 
-// scan will analyze two sets of env key value pairs identifying keys that
-// exist in the master file and are missing in the working file
+// scan will analyze two sets of env key value pairs identifying:
+// 1) keys that exist in the master file and are missing in the working file
+// 2) keys that exists but have different values
 func (e *envAnalyzer) scan() {
 	for _, master := range e.envMaster {
 		exists := false
 		for _, working := range e.envWorking {
 			if master.Key == working.Key {
+				if master.Value != working.Value {
+					e.different = append(e.different,
+						fmt.Sprintf("%s=%s", working.Key, working.Value))
+				}
+
 				exists = true
 			}
 		}

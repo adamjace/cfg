@@ -73,15 +73,15 @@ func (e envAnalyzer) unmarshal(env []string) ([]configEnv, error) {
 		}
 
 		if len(parts) != 2 {
-			return nil, errors.New("Invalid key value pair in .env config")
+			return nil, errors.New("Invalid key value pair found in config")
 		}
 
-		ce := configEnv{
+		c := configEnv{
 			Key:   parts[0],
 			Value: parts[1],
 		}
 
-		config = append(config, ce)
+		config = append(config, c)
 	}
 
 	return config, nil

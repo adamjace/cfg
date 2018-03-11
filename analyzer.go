@@ -76,7 +76,7 @@ func PrintJson(c Config) error {
 		return nil
 	}
 
-	fmt.Printf("warning! missing keys from json file (%s): %+v\n", c.MasterPath, keys)
+	fmt.Printf("warning! found missing keys in json file (%s): %+v\n", c.WorkingPath, keys)
 
 	return nil
 }
@@ -93,7 +93,7 @@ func PrintEnv(c Config) error {
 		return nil
 	}
 
-	fmt.Printf("warning! missing keys from env file (%s): %+v\n", c.MasterPath, keys)
+	fmt.Printf("warning! found missing keys in env file (%s): %+v\n", c.WorkingPath, keys)
 
 	return nil
 }

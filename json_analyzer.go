@@ -41,7 +41,7 @@ func newJsonAnalyzer(c Config) (*jsonAnalyzer, error) {
 	return &jsonAnalyzer, nil
 }
 
-// analyze will analyze two sets of json config files identifying keys that
+// scan will analyze two sets of json config files identifying keys that
 // exist in the master file and are missing in the working file
 func (j *jsonAnalyzer) scan() {
 	j.diff(j.jsonWorking, j.jsonMaster)
@@ -50,11 +50,11 @@ func (j *jsonAnalyzer) scan() {
 // diff will peform a diff on keys between two maps, storing ones
 // that exist in the master and are missing in the working file
 func (j *jsonAnalyzer) diff(working jsoncfg, master jsoncfg) {
-	keysA := j.keys(working, master)
-	keysB := j.keys(master, working)
+	a := j.keys(working, master)
+	b := j.keys(master, working)
 
-	for _, str := range keysB {
-		if !j.contains(keysA, str) && !j.contains(j.missing, str) {
+	for _, str := range b {
+		if !j.contains(a, str) && !j.contains(j.missing, str) {
 			j.missing = append(j.missing, str)
 		}
 	}
